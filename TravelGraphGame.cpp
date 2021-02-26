@@ -1,5 +1,9 @@
 #include <iostream>
 #include <random>
+#include <boost/array.hpp>
+#include <boost/graph/breadth_first_search.hpp>
+#include <boost/graph/named_function_params.hpp>
+#include <boost/graph/visitors.hpp>
 #include "TravelGraphGame.h"
 
 TravelGraphGame::TravelGraphGame(std::vector<Site> &isites) : sites(isites) {
@@ -12,7 +16,7 @@ void TravelGraphGame::make_graph() {
     // seed the psuedorandom number generator from a hardware random seed
     std::random_device rdev;
     rnd.seed(rdev());
-    std::uniform_int_distribution<> place_gen(0, sites.size());
+    std::uniform_int_distribution<> place_gen(0, sites.size()-1);
     std::uniform_int_distribution<> paths_gen(2, 10);  // range of number of base lines we'll draw from each site
     std::normal_distribution<> short_path_gen(0, 20);    // used to generate several paths to close sites
     std::normal_distribution<> long_path_gen(700, 100); // generate a long path to a distant site
@@ -61,7 +65,7 @@ void TravelGraphGame::game_loop() {
     std::cout << "**** My Destination ****" << std::endl;
     sites[my_destination].print_info();
     do {
-        std::cout << "**** My Current Location ****" << std::endl;
+        std::cout << std::endl << "**** My Current Location ****" << std::endl;
         sites[my_location].print_info();
         graph_type::out_edge_iterator eit, eend;
         std::tie(eit, eend) = boost::out_edges(my_location, g);
@@ -78,16 +82,20 @@ void TravelGraphGame::game_loop() {
 
         valid_input = false;
         do {
-            std::cout << "To where? (0-" << hops.size()-1 << ") or 'd' for destination info.  --> " << std::flush;
+            std::cout << "To where? (0-" << hops.size()-1 << ") or [d]estination info or [g]ive up.  --> " << std::flush;
             std::cin >> input;
             if (input == "d") {
                 std::cout << "**** My Destination ****" << std::endl;
                 sites[my_destination].print_info();
                 continue;
             }
+            if (input == "g") {
+                bfs_solution();
+                return;
+            }
             try {
                 next_dest = std::stoi(input);
-                if (next_dest < 0 || next_dest > sites.size()) {
+                if (next_dest < 0 || next_dest > hops.size()-1) {
                     std::cout << "Number out of range, try again!" << std::endl;
                 } else {
                     valid_input = true;
@@ -112,5 +120,22 @@ void TravelGraphGame::game_loop() {
         std::cout << "You made it to your destination and you WON!!!  Congratulations!" << std::endl;
         std::cout << "You took " << my_path.size() << " turns." << std::endl;
     }
+
+}
+
+void TravelGraphGame::bfs_solution() {
+    boost::array<int, 1500> path_node{};
+    boost::breadth_first_search(g, my_destination, boost::visitor(
+            boost::make_bfs_visitor(boost::record_predecessors(
+                    path_node.begin(), boost::on_tree_edge{}))));
+
+    int step = my_start;
+    while (step != my_destination) {
+        sites[step].print_short();
+        std::cout << " --> ";
+        step = path_node[step];
+    }
+    sites[step].print_short();
+    std::cout << std::endl;
 }
 

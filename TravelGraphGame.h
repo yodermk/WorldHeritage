@@ -9,6 +9,7 @@ class TravelGraphGame {
     const std::vector<Site> &sites;
     std::vector<int> my_path;
     int my_start, my_location, my_destination;
+    void bfs_solution();
 public:
     explicit TravelGraphGame(std::vector<Site> &isites);
     void make_graph();

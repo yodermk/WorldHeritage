@@ -13,6 +13,9 @@ are printed with your current location.
 
 Oh, and if you hit a site you were at before, you LOSE!!!
 
+Entering 'd' at any time will remind you of your destination, and entering 'g' will
+give up and print the shortest path from the start to the destination.
+
 The purpose of this program was to do some exploration of modern C++ and Boost, especially
 the Boost Graph library.  A lot more data is loaded than is used in the game currently.
 I'm thinking about doing some data science on it as well.
